@@ -5,12 +5,12 @@ This command helps you review code and bring it into compliance with the project
 ## Usage
 
 ```
-/review
+/review-ts
 ```
 
 Or to specify a particular file:
 ```
-/review [file-path]
+/review-ts [file-path]
 ```
 
 ## What This Command Does
