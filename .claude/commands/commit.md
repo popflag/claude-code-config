@@ -6,28 +6,21 @@ This command helps you create well-formatted commits with conventional commit me
 
 To create a commit, just type:
 ```
-/commit-py
-```
-
-Or with options:
-```
-/commit-py --no-verify
+/commit
 ```
 
 ## What This Command Does
 
-1. Unless specified with `--no-verify`, automatically runs pre-commit checks:
-   - `ruff check` to ensure code quality
-2. Checks which files are staged with `git status`
-3. If 0 files are staged, automatically adds all modified and new files with `git add`
-4. Performs a `git diff` to understand what changes are being committed
-5. Analyzes the diff to determine if multiple distinct logical changes are present
-6. If multiple distinct changes are detected, suggests breaking the commit into multiple smaller commits
-7. For each commit (or the single commit if not split), creates a commit message using emoji conventional commit format
+1. Checks which files are staged with `git status`
+2. If 0 files are staged, automatically adds all modified and new files with `git add`
+3. Performs a `git diff` to understand what changes are being committed
+4. Analyzes the diff to determine if multiple distinct logical changes are present
+5. If multiple distinct changes are detected, suggests breaking the commit into multiple smaller commits
+6. For each commit (or the single commit if not split), creates a commit message using emoji conventional commit format
 
 ## Best Practices for Commits
 
-- **Verify before committing**: Ensure code is linted correctly
+- **Verify before committing**: Ensure code is linted, builds correctly, and documentation is updated
 - **Atomic commits**: Each commit should contain related changes that serve a single purpose
 - **Split large changes**: If changes touch multiple concerns, split them into separate commits
 - **Conventional commit format**: Use the format `<type>: <description>` where type is one of:
@@ -146,13 +139,8 @@ Example of splitting commits:
 - Seventh commit: ✅ test: add unit tests for new solc version features
 - Eighth commit: 🔒️ fix: update dependencies with security vulnerabilities
 
-## Command Options
-
-- `--no-verify`: Skip running the pre-commit checks (lint, build, generate:docs)
-
 ## Important Notes
 
-- By default, pre-commit checks (`ruff check`) will run to ensure code quality
 - If these checks fail, you'll be asked if you want to proceed with the commit anyway or fix the issues first
 - If specific files are already staged, the command will only commit those files
 - If no files are staged, it will automatically stage all modified and new files
