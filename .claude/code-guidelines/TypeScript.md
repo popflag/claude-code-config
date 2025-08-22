@@ -1,63 +1,173 @@
-# Claude Command: Review
+# TypeScript Code Guidelines
 
-This command helps you review code and bring it into compliance with the project's TypeScript coding guidelines.
+## Variable Declarations
 
-## Usage
+### Inline Usage for Single-Use Variables
 
-```
-/review
-```
+Quick description: Do not declare constants that are only used once. Use their value directly inline instead.
 
-Or to specify a particular file:
-```
-/review [file-path]
-```
+✅ DO:
 
-## What This Command Does
-
-It performs the code review by following these steps:
-
-### Step 1: Read the Coding Guidelines
-First, it uses the Read tool to read the project's TypeScript coding guidelines:
-
-```
-Read ./.claude/code-guidelines/typescript.md
+```typescript
+const deleteResponse = await genqlMutation({
+  prisma,
+  source: {
+    deleteTag: [{ id: createResponse.createTag.id }, { id: true }],
+  },
+  userId: seededData.users[0].id,
+  workspaceId: seededData.workspaces[1].id,
+});
 ```
 
-### Step 2: Identify Files for Review
-- If the user specifies a file path, it reviews that file.
-- If no path is specified, it checks for staged TypeScript files using `git status`.
-- If there are no staged files, it scans for all TypeScript files in the project (`packages/**/*.ts`).
+❌ DON'T:
 
-### Step 3: Analyze Each File
-For each file to be reviewed:
-1. It reads the file's content using the Read tool.
-2. It analyzes the code against the rules in the coding guidelines.
-3. It identifies code patterns that do not comply with the guidelines.
-4. It generates specific suggestions for modification for each issue.
+```typescript
+const tagId = createResponse.createTag.id;
 
-### Step 4: Generate the Review Report
-It creates a detailed report that includes:
-- 📁 File path
-- ⚠️ Issues found (including line numbers and specific descriptions)
-- ✅ Issues that can be automatically fixed
-- ⚠️ Complex cases that require manual review
-- 🔧 Specific modification suggestions (showing a before-and-after code comparison)
+const deleteResponse = await genqlMutation({
+  prisma,
+  source: {
+    deleteTag: [{ id: tagId }, { id: true }],
+  },
+  userId: seededData.users[0].id,
+  workspaceId: seededData.workspaces[1].id,
+});
+```
 
-### Step 5: Apply Modifications
-- It asks the user if they want to apply the automatic fixes.
-- It uses the Edit or MultiEdit tool to apply safe modifications.
-- It provides detailed explanations for issues that require manual judgment.
+### Direct Reference to Static Data
 
-### Step 6: Verify Changes
-After the modifications are applied:
-1. It runs `bun lint` to check the code quality.
-2. If there are errors, it reports the issues and suggests solutions.
-3. It confirms that all changes comply with the coding guidelines.
+Quick description: Always reference static data (like seededData) directly without creating intermediate variables.
 
-## Important Reminders
+✅ DO:
 
-- Always read the latest version of the coding guidelines file first.
-- Ensure you understand the purpose of each rule before making changes.
-- Provide detailed explanations and reasoning for complex refactoring.
-- Verify that the code still works correctly after modification.
+```typescript
+const deleteResponse = await genqlMutation({
+  prisma,
+  source: {
+    deleteTag: [{ id: seededData.tags[0].id }, { id: true }],
+  },
+  userId: seededData.users[0].id,
+  workspaceId: seededData.workspaces[0].id,
+});
+
+const tag = await prisma.tag.findUnique({
+  where: { id: seededData.tags[0].id },
+});
+```
+
+❌ DON'T:
+
+```typescript
+const tagToDelete = seededData.tags[0]; // Unnecessary intermediate variable
+
+const deleteResponse = await genqlMutation({
+  prisma,
+  source: {
+    deleteTag: [{ id: tagToDelete.id }, { id: true }],
+  },
+  userId: seededData.users[0].id,
+  workspaceId: seededData.workspaces[0].id,
+});
+
+const tag = await prisma.tag.findUnique({
+  where: { id: tagToDelete.id },
+});
+```
+
+### Exceptions
+
+Variables may be declared separately if:
+
+- They are used multiple times
+- The expression is complex and would harm readability if used inline
+- The variable name provides important semantic context that would be lost with inline usage
+- Debugging purposes require a specific variable to be inspectable
+
+## Types vs Interfaces
+
+Quick description: Always use `type` for declaring types, avoid interfaces.
+
+✅ DO:
+
+```tsx
+export type UpsertTagNamespaceFormModalProps = {
+  tagNamespace: UpsertTagNamespaceFormProps['tagNamespace'];
+  trigger?: ReactElement;
+};
+```
+
+❌ DON'T:
+
+```tsx
+interface UpsertTagNamespaceFormModalProps {
+  tagNamespace: UpsertTagNamespaceFormProps['tagNamespace'];
+  trigger?: ReactElement;
+}
+```
+
+## Function Definitions
+
+Quick description: Use arrow functions with `export const` syntax instead of standard function declarations.
+
+✅ DO:
+
+```typescript
+export const getCollectionAncestors = async ({ collection, ctx }: GetCollectionAncestorsArgs) => {
+  // Implementation
+};
+```
+
+❌ DON'T:
+
+```typescript
+export async function getCollectionAncestors({ collection, ctx }: GetCollectionAncestorsArgs): Promise<string[]> {
+  // Implementation
+}
+```
+
+## Type Parameters
+
+Quick description: Use descriptive names with `Args` suffix for function parameters and prefer `Pick<>` over custom types when referencing model properties.
+
+✅ DO:
+
+```typescript
+export type GetCollectionAncestorsArgs = {
+  collection: Pick<Collection, 'id' | 'parentCollectionId'>;
+  ctx: Context;
+};
+```
+
+❌ DON'T:
+
+```typescript
+export type CollectionInfo = {
+  id: string;
+  parentCollectionId: string | null;
+};
+
+export type GetCollectionAncestorsParams = {
+  collection: CollectionInfo;
+  ctx: Context;
+};
+```
+
+## Return Types
+
+Quick description: Prefer implicit return types when possible, let TypeScript infer the types.
+
+✅ DO:
+
+```typescript
+export const getCollectionAncestors = async ({ collection, ctx }: GetCollectionAncestorsArgs) => {
+  // TypeScript will infer the return type
+};
+```
+
+❌ DON'T:
+
+```typescript
+export const getCollectionAncestors = async ({ collection, ctx }: GetCollectionAncestorsArgs): Promise<string[]> => {
+  // Explicitly specified return type
+};
+```
