@@ -12,3 +12,4 @@ Claude Code 项目相关配置
 - Code Guidelines
   - TypeScript
   - Python
+  - ChangeLog
