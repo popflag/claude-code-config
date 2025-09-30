@@ -2,32 +2,6 @@
 
 ## Variable Declarations
 
-### Inline Usage for Single-Use Variables
-
-Quick description: Do not declare variables that are only used once. Use their value directly inline instead.
-
-✅ DO:
-
-```python
-response = await api_client.delete_product({
-    "product_id": product_data.get("id"),
-    "account_id": account_config["walmart"]["account_id"],
-    "region": "US"
-})
-```
-
-❌ DON'T:
-
-```python
-product_id = product_data.get("id")
-
-response = await api_client.delete_product({
-    "product_id": product_id,
-    "account_id": account_config["walmart"]["account_id"],
-    "region": "US"
-})
-```
-
 ### Direct Reference to Configuration Data
 
 Quick description: Always reference configuration data and constants directly without creating intermediate variables.
@@ -145,6 +119,47 @@ def get_product_categories(product_ids: List[str]) -> List[Tuple[str, Optional[s
 def process_inventory_data(products, account_id):
     """Process inventory data and return upload results."""
     return {"uploaded": len(products), "failed": 0}
+```
+
+## Pydantic Models
+
+Quick description: Use `Annotated` with `Field` instead of assigning `Field` directly. This separates type information from field configuration and improves code readability.
+
+✅ DO:
+
+```python
+from typing import Annotated
+from pydantic import BaseModel, Field
+
+class ProductModel(BaseModel):
+    sku: Annotated[str, Field(description="产品SKU", min_length=1)]
+    name: Annotated[str, Field(description="产品名称")]
+    price: Annotated[float, Field(description="价格", gt=0)]
+    category_id: Annotated[str | None, Field(default=None, description="分类ID")]
+    is_active: Annotated[bool, Field(default=True, description="是否启用")]
+
+class UploadConfig(BaseModel):
+    batch_size: Annotated[int, Field(default=100, ge=1, le=1000, description="批次大小")]
+    enable_llm: Annotated[bool, Field(default=False, description="启用LLM")]
+    retry_count: Annotated[int, Field(default=3, ge=0, description="重试次数")]
+```
+
+❌ DON'T:
+
+```python
+from pydantic import BaseModel, Field
+
+class ProductModel(BaseModel):
+    sku: str = Field(description="产品SKU", min_length=1)
+    name: str = Field(description="产品名称")
+    price: float = Field(description="价格", gt=0)
+    category_id: str | None = Field(default=None, description="分类ID")
+    is_active: bool = Field(default=True, description="是否启用")
+
+class UploadConfig(BaseModel):
+    batch_size: int = Field(default=100, ge=1, le=1000, description="批次大小")
+    enable_llm: bool = Field(default=False, description="启用LLM")
+    retry_count: int = Field(default=3, ge=0, description="重试次数")
 ```
 
 ## Function Parameters
@@ -317,3 +332,4 @@ async def sync_multiple_accounts(account_ids: list[str]) -> dict[str, bool]:
             results[account_id] = False
     return results
 ```
+
